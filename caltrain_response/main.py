@@ -51,7 +51,7 @@ def ping_caltrain(station):
     ct_df = build_caltrain_df()
 
     # Read in stops_ids from CSV file
-    stops_df = pd.read_csv(".stop_ids.csv")
+    stops_df = pd.read_csv("stop_ids.csv")
     # Create two dictionaries, one for stop1 to stopname and one for stop2 to stopname
     stop1_to_stopname = dict(zip(stops_df["stop1"], stops_df["stopname"]))
     stop2_to_stopname = dict(zip(stops_df["stop2"], stops_df["stopname"]))
@@ -83,6 +83,8 @@ def ping_caltrain(station):
 
 
 def format_df_as_text(df):
+    # Fill in any missing values with empty strings
+    df = df.fillna("")
     # Find the maximum length of each column
     max_lengths = df.apply(lambda x: x.str.len()).max()
 
@@ -146,5 +148,6 @@ def main(request):
     }
     station = station_map.get(station, station)
     message = ping_caltrain(station)
+    print(message)
     send_twilio_message(message, ACCOUNT_SID, AUTH_TOKEN, FROM_NUMBER, TO_NUMBER)
     return "OK"
