@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import pytz
 import datetime
+import st_extras
 
 st.set_page_config(page_title="Caltrain Timetable", page_icon="🛤", layout="centered")
 
@@ -127,10 +128,16 @@ col1, _ = st.columns([2, 1])
 
 col1.markdown(
     """
-    This app pulls live data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays the next scheduled trains for a given station. The data is refreshed on load. 
+    This app pulls data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays the next scheduled trains for a given station. The data is refreshed on load.
 
     """
 )
+col1, col2 = st.columns([1, 1])
+with col1:
+    badge("twitter", "TYLERSlMONS", "https://twitter.com/TYLERSlMONS")
+with col2:
+    badge("github", "tyler-simons/spotify", "https://github.com/tyler-simons/spotify")
+
 
 chosen_station = col1.selectbox("Choose Station", caltrain_stations["stopname"], index=13)
 
