@@ -55,7 +55,8 @@ def ping_caltrain(station):
     try:
        ct_df = build_caltrain_df()
     except:
-        st.error("Caltrain API is currently down")
+        col1, col2 = st.columns([2, 1])
+        col1.error("Caltrain Live Map API is currently down")
         st.stop()
 
     # Read in stops_ids from CSV file
