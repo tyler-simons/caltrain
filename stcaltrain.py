@@ -198,10 +198,10 @@ caltrain_data_sb.index = caltrain_data_sb.index + 1
 
 # Display the dataframes split by Train #, Scheduled Departure, Current Stop and the other columns
 st.subheader("Northbound")
-st.dataframe(caltrain_data_nb)
+st.dataframe(caltrain_data_nb, use_container_width=True)
 
 st.subheader("Southbound")
-st.dataframe(caltrain_data_sb)
+st.dataframe(caltrain_data_sb, use_container_width=True)
 
 col1, col2 = st.columns([8, 4])
 with col1:
