@@ -95,6 +95,8 @@ def ping_caltrain(station):
     # Calculate the time difference between the scheduled departure and the current time
     diffs = [datetime.datetime.combine(datetime.date.today(), i.time()) - now for i in arrs]
 
+    st.write(now)
+    st.write(diffs)
     # 0 if a diff is negative
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
     time_diffs = [str(i)[0:4] for i in time_diffs]
