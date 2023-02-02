@@ -17,7 +17,9 @@ def create_train_df(train):
     stops_df["train_num"] = train["TripUpdate"]["Trip"]["TripId"]
     stops_df["direction"] = train["TripUpdate"]["Trip"]["DirectionId"]
     # Fill in missing Arrival.Time values with Departure.Time
-    stops_df["Arrival.Time"] = stops_df["Arrival.Time"].fillna(stops_df["Departure.Time"])
+    stops_df["Arrival.Time"] = stops_df["Arrival.Time"].fillna(
+        stops_df["Departure.Time"]
+    )
 
     # Convert the arrival and departure times to datetime objects with pacfic timezone in the format strftime ("%-I:%M:%S %p")
     tz = pytz.timezone("US/Pacific")
@@ -37,7 +39,9 @@ def build_caltrain_df():
     tz = pytz.timezone("US/Pacific")
     curr_timestamp = datetime.datetime.utcnow().replace(tzinfo=tz).strftime("%s")
     curr_timestamp = int(curr_timestamp) * 1000
-    ping_url = f"https://www.caltrain.com/files/rt/tripupdates/CT.json?time={curr_timestamp}"
+    ping_url = (
+        f"https://www.caltrain.com/files/rt/tripupdates/CT.json?time={curr_timestamp}"
+    )
     real_time_trains = requests.get(ping_url).json()
 
     all_trains = []
@@ -66,17 +70,35 @@ def ping_caltrain(station):
     ct_df["direction"] = ct_df["direction"].map({0: "NB", 1: "SB"})
 
     # Get the number of stops from the first train in the dataframe until the station
-    ct_df["num_stops"] = ct_df.groupby("train_num")["arrival_time"].rank(method="first", ascending=True) - 1
+    ct_df["num_stops"] = (
+        ct_df.groupby("train_num")["arrival_time"].rank(method="first", ascending=True)
+        - 1
+    )
     ct_df_first_train = ct_df.groupby("train_num").head(1)
-    ct_df_first_train = ct_df_first_train[["train_num", "StopId", "departure_time", "num_stops"]]
-    ct_df = ct_df.query(f'StopId == "{station}"').sort_values(["direction", "departure_time"])
-    ct_df = ct_df.merge(ct_df_first_train, on="train_num", how="left", suffixes=("", "_now"))
+    ct_df_first_train = ct_df_first_train[
+        ["train_num", "StopId", "departure_time", "num_stops"]
+    ]
+    ct_df = ct_df.query(f'StopId == "{station}"').sort_values(
+        ["direction", "departure_time"]
+    )
+    ct_df = ct_df.merge(
+        ct_df_first_train, on="train_num", how="left", suffixes=("", "_now")
+    )
 
     # Drop StopId and arrival_time columns
     ct_df.drop(["StopId", "arrival_time", "num_stops_now"], axis=1, inplace=True)
 
     # Move num_stops to the end
-    ct_df = ct_df[["train_num", "direction", "departure_time", "StopId_now", "departure_time_now", "num_stops"]]
+    ct_df = ct_df[
+        [
+            "train_num",
+            "direction",
+            "departure_time",
+            "StopId_now",
+            "departure_time_now",
+            "num_stops",
+        ]
+    ]
 
     # Change column names to TN, Dir, Dep
     ct_df.columns = [
@@ -89,8 +111,13 @@ def ping_caltrain(station):
     ]
 
     # Calculate the time difference between the scheduled departure and the current stop arrival
-    arrs = [datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()]
-    now = datetime.datetime.combine(datetime.datetime(1900, 1, 1), datetime.datetime.now().time())
+    arrs = [
+        datetime.datetime.strptime(i, "%I:%M %p")
+        for i in ct_df["Scheduled Departure"].tolist()
+    ]
+    now = datetime.datetime.combine(
+        datetime.datetime(1900, 1, 1), datetime.datetime.now().time()
+    )
     now = now - datetime.timedelta(hours=8)
 
     # Calculate the time difference between the scheduled departure and the current time
@@ -108,10 +135,21 @@ def ping_caltrain(station):
     ct_df["Stops Away"] = ct_df["Stops Away"].astype("int")
 
     # If scheduled departure is equal to current stop arrival, set stops away to 0
-    ct_df.loc[ct_df["Scheduled Departure"] == ct_df["Current Location Time"], "Stops Away"] = 0
+    ct_df.loc[
+        ct_df["Scheduled Departure"] == ct_df["Current Location Time"], "Stops Away"
+    ] = 0
 
     # Return the dataframe neatly formatted as a string
-    ct_df = ct_df[["Train #", "Scheduled Departure", "Time Difference", "Stops Away", "Direction", "Current Location"]]
+    ct_df = ct_df[
+        [
+            "Train #",
+            "Scheduled Departure",
+            "Time Difference",
+            "Stops Away",
+            "Direction",
+            "Current Location",
+        ]
+    ]
     ct_df.columns = [
         "Train #",
         "Scheduled Arrival",
@@ -136,9 +174,14 @@ col1.markdown(
 )
 
 
-chosen_station = col1.selectbox("Choose Station", caltrain_stations["stopname"], index=13)
+chosen_station = col1.selectbox(
+    "Choose Station", caltrain_stations["stopname"], index=13
+)
 
 caltrain_data = ping_caltrain(chosen_station)
+
+if st.button("Refresh data"):
+    caltrain_data = ping_caltrain(chosen_station)
 
 # Reorder the columns
 
