@@ -90,8 +90,9 @@ def ping_caltrain(station):
 
     # Calculate the time difference between the scheduled departure and the current stop arrival
     arrs = [datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()]
-    now = datetime.datetime.combine(datetime.datetime(1900, 1, 1), datetime.datetime.now().time())
-    now = now - datetime.timedelta(hours=8)
+    now = datetime.datetime.combine(datetime.datetime(1900, 1, 2), datetime.datetime.now().time())
+    now = now - datetime.timedelta(hours=16)
+
     # Calculate the time difference between the scheduled departure and the current time
     diffs = [now - i for i in arrs]
 
