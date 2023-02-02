@@ -151,7 +151,7 @@ def ping_caltrain(station):
     ]
     ct_df.columns = [
         "Train #",
-        "Scheduled Arrival",
+        "Scheduled Departure",
         "ETA",
         "Stops Left",
         "Direction",
