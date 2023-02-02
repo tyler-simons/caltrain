@@ -173,7 +173,7 @@ col1.markdown(
     """
 )
 
-col1, col2 = st.columns([2, 1])
+col1, col2 = st.columns([1, 1])
 chosen_station = col1.selectbox(
     "Choose Station", caltrain_stations["stopname"], index=13
 )
