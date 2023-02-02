@@ -173,8 +173,10 @@ col1.markdown(
 )
 
 col1, col2 = st.columns([1, 1])
+default_station = caltrain_stations["stopname"][13]
+options = sorted(caltrain_stations["stopname"])
 chosen_station = col1.selectbox(
-    "Choose Station", caltrain_stations["stopname"], index=13
+    "Choose Station", options, index=options.index(default_station)
 )
 
 caltrain_data = ping_caltrain(chosen_station)
