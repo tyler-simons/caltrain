@@ -164,7 +164,7 @@ def ping_caltrain(station):
 
 st.title("🚊 Caltrain Real Times 🛤")
 caltrain_stations = pd.read_csv("stop_ids.csv")
-col1, _ = st.columns([2, 1])
+col1, col2 = st.columns([2, 1])
 
 col1.markdown(
     """
@@ -180,7 +180,7 @@ chosen_station = col1.selectbox(
 
 caltrain_data = ping_caltrain(chosen_station)
 
-if st.button("Refresh data"):
+if col2.button("🔄"):
     caltrain_data = ping_caltrain(chosen_station)
 
 # Reorder the columns
