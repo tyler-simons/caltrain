@@ -52,7 +52,11 @@ def build_caltrain_df():
 
 
 def ping_caltrain(station):
-    ct_df = build_caltrain_df()
+    try:
+       ct_df = build_caltrain_df()
+    except:
+        st.error("Caltrain API is currently down")
+        st.stop()
 
     # Read in stops_ids from CSV file
     stops_df = pd.read_csv("stop_ids.csv")
