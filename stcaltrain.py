@@ -157,6 +157,7 @@ st.dataframe(caltrain_data_nb)
 st.subheader("Southbound")
 st.dataframe(caltrain_data_sb)
 
+st.markdown("---")
 col1, col2 = st.columns([4, 3])
 with col1:
     badge("twitter", "TYLERSlMONS", "https://twitter.com/TYLERSlMONS")
