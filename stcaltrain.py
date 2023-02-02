@@ -180,8 +180,9 @@ chosen_station = col1.selectbox(
 
 caltrain_data = ping_caltrain(chosen_station)
 
-if col2.button("🔄"):
-    caltrain_data = ping_caltrain(chosen_station)
+# Hide button
+# if col2.button("🔄"):
+#     caltrain_data = ping_caltrain(chosen_station)
 
 # Reorder the columns
 
