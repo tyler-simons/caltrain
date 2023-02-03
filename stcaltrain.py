@@ -107,10 +107,14 @@ def ping_caltrain(station):
     arrs = [
         datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()
     ]
+
+    pstz = pytz.timezone("US/Pacific")
     old_day = datetime.datetime(1900, 1, 1)
-    old_day_time = datetime.datetime.now().time()
+    old_day_time = datetime.datetime.now(tz=pstz).time()
+    # num_hours_fix = 16 if old_day_time.hour < 8 else -8
     now = datetime.datetime.combine(
-        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
+        old_day,
+        datetime.time(old_day_time.hour, old_day_time.minute, old_day_time.second),
     )
 
     # Calculate the time difference between the scheduled departure and the current time
@@ -205,7 +209,7 @@ def get_schedule(datadirection):
     # Convert this row to the same as the other caltrain output
     old_day = datetime.datetime(1900, 1, 1)
     old_day_time = datetime.datetime.now().time()
-    num_hours_fix = 16 if old_day_time.hour <= 8 else -8
+    num_hours_fix = 16 if old_day_time.hour < 8 else -8
     now = datetime.datetime.combine(
         old_day,
         datetime.time(old_day_time.hour + num_hours_fix, old_day_time.minute, old_day_time.second),
