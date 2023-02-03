@@ -108,8 +108,10 @@ def ping_caltrain(station):
         datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()
     ]
     old_day = datetime.datetime(1900, 1, 1)
-    old_day_time = datetime.datetime.now().time() - datetime.timedelta(hours=8)
-    now = datetime.datetime.combine(old_day, old_day_time)
+    old_day_time = datetime.datetime.now().time()
+    now = datetime.datetime.combine(
+        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
+    )
 
     # Calculate the time difference between the scheduled departure and the current time
     diffs = [i - now for i in arrs]
@@ -218,8 +220,6 @@ def get_schedule(datadirection):
 
     # Calculate the time difference between the scheduled departure and the current time
     diffs = [i - now for i in df["ETA"].tolist()]
-    st.write(df["ETA"])
-    st.write(now)
 
     # 0 if a diff is negative
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
