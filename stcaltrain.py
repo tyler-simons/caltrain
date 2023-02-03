@@ -63,7 +63,7 @@ def ping_caltrain(station):
     try:
         ct_df = build_caltrain_df()
     except:
-        return "API Down"
+        return pd.DataFrame()
 
     # Read in stops_ids from CSV file
     stops_df = pd.read_csv("stop_ids.csv")
@@ -301,7 +301,7 @@ col1, col2 = st.columns([2, 1])
 chosen_station = col1.selectbox("Choose Origin Station", caltrain_stations["stopname"], index=13)
 caltrain_data = ping_caltrain(chosen_station)
 
-if caltrain_data == "API Down":
+if caltrain_data.shape[0] == 0:
 
     chosen_destination = col1.selectbox(
         "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
@@ -339,7 +339,7 @@ else:
     if col2.button("🔄"):
         caltrain_data = ping_caltrain(chosen_station)
 
-    st.success("✅ Caltrain Live Map API is up and running.")
+    col1.success("✅ Caltrain Live Map API is up and running.")
 
 
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
