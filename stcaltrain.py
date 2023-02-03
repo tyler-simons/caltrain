@@ -204,7 +204,7 @@ def get_schedule(datadirection):
     old_day = datetime.datetime(1900, 1, 1)
     old_day_time = datetime.datetime.now().time()
     now = datetime.datetime.combine(
-        old_day, datetime.time(old_day_time.hour - 8, old_day_time.minute, old_day_time.second)
+        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
     )
 
     # Transpose the dataframe
