@@ -58,8 +58,7 @@ def build_caltrain_df():
     return all_trains_df
 
 
-@st.experimental_memo(ttl=5)
-def ping_caltrain(station, destination="Burlingame"):
+def ping_caltrain(station):
     try:
         ct_df = build_caltrain_df()
     except:
@@ -175,7 +174,6 @@ def ping_caltrain(station, destination="Burlingame"):
     return ct_df
 
 
-# @st.experimental_memo(ttl=60)
 def get_schedule(datadirection, chosen_station, chosen_destination=None):
 
     if chosen_destination == "--" or chosen_station == chosen_destination:
@@ -342,13 +340,7 @@ if caltrain_data.shape[0] == 0:
 
 
 else:
-    col2.write("\n")
-    col2.write("\n")
-    if col2.button("🔄"):
-        caltrain_data = ping_caltrain(chosen_station)
-
     col1.success("✅ Caltrain Live Map API is up and running.")
-
 
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
@@ -367,6 +359,9 @@ col1.dataframe(caltrain_data_nb, use_container_width=True)
 
 col1.subheader("Southbound")
 col1.dataframe(caltrain_data_sb, use_container_width=True)
+
+if col1.button("Refresh 🔄"):
+    st.experimental_rerun()
 
 col1, col2 = st.columns([2, 1])
 with col1:
