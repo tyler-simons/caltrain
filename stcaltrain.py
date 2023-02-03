@@ -4,6 +4,7 @@ import streamlit as st
 import pytz
 import datetime
 from streamlit_extras.badges import badge
+from bs4 import BeautifulSoup
 
 st.set_page_config(page_title="Caltrain Timetable", page_icon="🛤", layout="centered")
 
@@ -17,9 +18,7 @@ def create_train_df(train):
     stops_df["train_num"] = train["TripUpdate"]["Trip"]["TripId"]
     stops_df["direction"] = train["TripUpdate"]["Trip"]["DirectionId"]
     # Fill in missing Arrival.Time values with Departure.Time
-    stops_df["Arrival.Time"] = stops_df["Arrival.Time"].fillna(
-        stops_df["Departure.Time"]
-    )
+    stops_df["Arrival.Time"] = stops_df["Arrival.Time"].fillna(stops_df["Departure.Time"])
 
     # Convert the arrival and departure times to datetime objects with pacfic timezone in the format strftime ("%-I:%M:%S %p")
     tz = pytz.timezone("US/Pacific")
@@ -39,9 +38,7 @@ def build_caltrain_df():
     tz = pytz.timezone("US/Pacific")
     curr_timestamp = datetime.datetime.utcnow().replace(tzinfo=tz).strftime("%s")
     curr_timestamp = int(curr_timestamp) * 1000
-    ping_url = (
-        f"https://www.caltrain.com/files/rt/tripupdates/CT.json?time={curr_timestamp}"
-    )
+    ping_url = f"https://www.caltrain.com/files/rt/tripupdates/CT.json?time={curr_timestamp}"
     real_time_trains = requests.get(ping_url).json()
 
     all_trains = []
@@ -53,11 +50,9 @@ def build_caltrain_df():
 
 def ping_caltrain(station):
     try:
-       ct_df = build_caltrain_df()
+        ct_df = build_caltrain_df()
     except:
-        col1, col2 = st.columns([2, 1])
-        col1.error("Caltrain Live Map API is currently down. Check the listed schedule [here](https://www.caltrain.com/about-caltrain/statistics-reports?active_tab=route_explorer_tab)")
-        st.stop()
+        return "API Down"
 
     # Read in stops_ids from CSV file
     stops_df = pd.read_csv("stop_ids.csv")
@@ -76,19 +71,12 @@ def ping_caltrain(station):
 
     # Get the number of stops from the first train in the dataframe until the station
     ct_df["num_stops"] = (
-        ct_df.groupby("train_num")["arrival_time"].rank(method="first", ascending=True)
-        - 1
+        ct_df.groupby("train_num")["arrival_time"].rank(method="first", ascending=True) - 1
     )
     ct_df_first_train = ct_df.groupby("train_num").head(1)
-    ct_df_first_train = ct_df_first_train[
-        ["train_num", "StopId", "departure_time", "num_stops"]
-    ]
-    ct_df = ct_df.query(f'StopId == "{station}"').sort_values(
-        ["direction", "departure_time"]
-    )
-    ct_df = ct_df.merge(
-        ct_df_first_train, on="train_num", how="left", suffixes=("", "_now")
-    )
+    ct_df_first_train = ct_df_first_train[["train_num", "StopId", "departure_time", "num_stops"]]
+    ct_df = ct_df.query(f'StopId == "{station}"').sort_values(["direction", "departure_time"])
+    ct_df = ct_df.merge(ct_df_first_train, on="train_num", how="left", suffixes=("", "_now"))
 
     # Drop StopId and arrival_time columns
     ct_df.drop(["StopId", "arrival_time", "num_stops_now"], axis=1, inplace=True)
@@ -117,12 +105,9 @@ def ping_caltrain(station):
 
     # Calculate the time difference between the scheduled departure and the current stop arrival
     arrs = [
-        datetime.datetime.strptime(i, "%I:%M %p")
-        for i in ct_df["Scheduled Departure"].tolist()
+        datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()
     ]
-    now = datetime.datetime.combine(
-        datetime.datetime(1900, 1, 1), datetime.datetime.now().time()
-    )
+    now = datetime.datetime.combine(datetime.datetime(1900, 1, 1), datetime.datetime.now().time())
     now = now - datetime.timedelta(hours=8)
 
     # Calculate the time difference between the scheduled departure and the current time
@@ -139,9 +124,7 @@ def ping_caltrain(station):
     ct_df["Stops Away"] = ct_df["Stops Away"].astype("int")
 
     # If scheduled departure is equal to current stop arrival, set stops away to 0
-    ct_df.loc[
-        ct_df["Scheduled Departure"] == ct_df["Current Location Time"], "Stops Away"
-    ] = 0
+    ct_df.loc[ct_df["Scheduled Departure"] == ct_df["Current Location Time"], "Stops Away"] = 0
 
     # Return the dataframe neatly formatted as a string
     ct_df = ct_df[
@@ -166,6 +149,90 @@ def ping_caltrain(station):
     return ct_df
 
 
+def get_schedule(datadirection):
+    # Pull the scheduled train times from this url
+    url = "https://www.caltrain.com/?active_tab=route_explorer_tab"
+
+    # Get the html from the url
+    html = requests.get(url).content
+
+    # Parse the html
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Get the table from the html
+    table = soup.find(
+        "table",
+        attrs={
+            "class": "caltrain_schedule table table-striped",
+            "data-direction": datadirection,
+        },
+    )
+    table_body = table.find("tbody")
+
+    # Get the rows from the table
+    rows = table_body.find_all("tr")
+
+    # Get the data from the rows
+    data = []
+    for row in rows:
+        cols = row.find_all("td")
+        cols = [ele.text.strip() for ele in cols]
+        data.append([ele for ele in cols if ele])
+
+    # Convert the data to a dataframe
+    df = pd.DataFrame(data)
+
+    # Drop the first column and any nas
+    df = df.drop(0, axis=1)
+
+    # Set the first column as the index
+    df.index = df[1]
+
+    # Make the first row the column names
+    new_header = df.iloc[0]
+    df = df[1:]
+    df.columns = new_header
+
+    # Drop the first column
+    df = df.drop(df.columns[0], axis=1)
+
+    # Filter the index in the dataframe to only the chosen station
+    df = df[df.index == chosen_station]
+
+    # Conver this row to the same as the other caltrain output
+    now = datetime.datetime.combine(datetime.datetime(1900, 1, 1), datetime.datetime.now().time())
+    now = now - datetime.timedelta(hours=8)
+
+    # Transpose the dataframe
+    df = df.T.reset_index()
+    df.columns = ["Train #", "Departure Time"]
+    df["Direction"] = datadirection
+
+    # Map NB to Northbound and SB to Southbound
+    df["Direction"] = df["Direction"].map({"northbound": "NB", "southbound": "SB"})
+    df["ETA"] = [datetime.datetime.strptime(i, "%I:%M%p") for i in df["Departure Time"].tolist()]
+
+    # Calculate the time difference between the scheduled departure and the current time
+    diffs = [i - now for i in df["ETA"].tolist()]
+
+    # 0 if a diff is negative
+    time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
+    time_diffs = [i.total_seconds() for i in time_diffs]
+
+    # Convert the time difference to a string like 00:00
+    time_diffs = [str(datetime.timedelta(seconds=i))[0:4] for i in time_diffs]
+
+    # Add the time difference to the dataframe
+    df["ETA"] = time_diffs
+
+    # Drop the trains that have already left
+    df = df[df["ETA"] != "0:00"]
+    df.reset_index(drop=True, inplace=True)
+    df.dropna(inplace=True)
+
+    return df
+
+
 st.title("🚊 Caltrain Real Times 🛤")
 caltrain_stations = pd.read_csv("stop_ids.csv")
 col1, col2 = st.columns([2, 1])
@@ -177,20 +244,24 @@ col1.markdown(
     """
 )
 
-col1, col2 = st.columns([1, 1])
-chosen_station = col1.selectbox(
-    "Choose Station", caltrain_stations["stopname"], index=13
-)
+col1, col2 = st.columns([2, 1])
+chosen_station = col1.selectbox("Choose Station", caltrain_stations["stopname"], index=13)
 
 caltrain_data = ping_caltrain(chosen_station)
 
-col2.write("\n")
-col2.write("\n")
-if col2.button("🔄"):
-    caltrain_data = ping_caltrain(chosen_station)
+col1, col2 = st.columns([2, 1])
+if caltrain_data == "API Down":
+    col1.error(
+        "❌ Caltrain Live Map API is currently down. Pulling the current schedule from the Caltrain website instead."
+    )
+    caltrain_data = pd.concat([get_schedule("northbound"), get_schedule("southbound")])
+else:
+    col2.write("\n")
+    col2.write("\n")
+    if col2.button("🔄"):
+        caltrain_data = ping_caltrain(chosen_station)
 
-# Reorder the columns
-
+    st.success("✅ Caltrain Live Map API is up and running.")
 
 # Split the caltrain data based on direction and drop the direction column
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
@@ -200,19 +271,19 @@ caltrain_data_sb = caltrain_data.query("Direction == 'SB'").drop("Direction", ax
 caltrain_data_nb.index = caltrain_data_nb.index + 1
 caltrain_data_sb.index = caltrain_data_sb.index + 1
 
-
+col1, col2 = st.columns([2, 1])
 # Display the dataframes split by Train #, Scheduled Departure, Current Stop and the other columns
-st.subheader("Northbound")
-st.dataframe(caltrain_data_nb)
+col1.subheader("Northbound")
+col1.dataframe(caltrain_data_nb, use_container_width=True)
 
-st.subheader("Southbound")
-st.dataframe(caltrain_data_sb)
+col1.subheader("Southbound")
+col1.dataframe(caltrain_data_sb, use_container_width=True)
 
-col1, col2 = st.columns([8, 4])
+col1, col2 = st.columns([2, 1])
 with col1:
     st.markdown("---")
 
-col1, col2 = st.columns([3, 3])
+col1, col2 = st.columns([1, 1])
 with col1:
     badge("twitter", "TYLERSlMONS", "https://twitter.com/TYLERSlMONS")
 with col2:
