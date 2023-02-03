@@ -108,10 +108,14 @@ def ping_caltrain(station):
     arrs = [
         datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()
     ]
+
+    # Convert this row to the same as the other caltrain output
+    pstz = pytz.timezone("US/Pacific")
     old_day = datetime.datetime(1900, 1, 1)
-    old_day_time = datetime.datetime.now().time()
+    old_day_time = datetime.datetime.now(tz=pstz).time()
     now = datetime.datetime.combine(
-        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
+        old_day,
+        datetime.time(old_day_time.hour, old_day_time.minute),
     )
 
     # Calculate the time difference between the scheduled departure and the current time
@@ -204,15 +208,21 @@ def get_schedule(datadirection, chosen_station):
     # Filter the index in the dataframe to only the chosen station
     df = df[df.index == chosen_station]
 
-    # Conver this row to the same as the other caltrain output
+    # Convert this row to the same as the other caltrain output
+    pstz = pytz.timezone("US/Pacific")
     old_day = datetime.datetime(1900, 1, 1)
-    old_day_time = datetime.datetime.now().time()
+    old_day_time = datetime.datetime.now(tz=pstz).time()
     now = datetime.datetime.combine(
-        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
+        old_day,
+        datetime.time(old_day_time.hour, old_day_time.minute),
     )
 
     # Transpose the dataframe
     df = df.T.reset_index()
+
+    # Drop any rows with the value -- in the 2nd column
+    df = df[df.iloc[:, 1] != "--"]
+
     df.columns = ["Train #", "Departure Time"]
     df["Direction"] = datadirection
 
