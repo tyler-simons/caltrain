@@ -214,6 +214,8 @@ def get_schedule(datadirection):
 
     # Calculate the time difference between the scheduled departure and the current time
     diffs = [i - now for i in df["ETA"].tolist()]
+    st.write(df["ETA"])
+    st.write(now)
 
     # 0 if a diff is negative
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
@@ -224,13 +226,13 @@ def get_schedule(datadirection):
 
     # Add the time difference to the dataframe
     df["ETA"] = time_diffs
-
+    st.write(time_diffs)
     # Drop the trains that have already left
     df = df[df["ETA"] != "0:00"]
     df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
 
-    return df
+    return df.head(5)
 
 
 st.title("🚊 Caltrain Real Times 🛤")
