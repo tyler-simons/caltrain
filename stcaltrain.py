@@ -48,6 +48,7 @@ def build_caltrain_df():
     return all_trains_df
 
 
+@st.experimental_memo(ttl=5)
 def ping_caltrain(station):
     try:
         ct_df = build_caltrain_df()
@@ -152,6 +153,7 @@ def ping_caltrain(station):
     return ct_df
 
 
+@st.experimental_memo(ttl=60)
 def get_schedule(datadirection):
     # Pull the scheduled train times from this url
     url = "https://www.caltrain.com/?active_tab=route_explorer_tab"
