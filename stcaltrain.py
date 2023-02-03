@@ -162,6 +162,8 @@ def ping_caltrain(station):
         "Direction",
         "Current Location",
     ]
+    # Sort by ETA
+    ct_df = ct_df.sort_values("ETA")
 
     return ct_df
 
