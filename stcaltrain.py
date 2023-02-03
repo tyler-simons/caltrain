@@ -107,8 +107,11 @@ def ping_caltrain(station):
     arrs = [
         datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()
     ]
-    now = datetime.datetime.combine(datetime.datetime(1900, 1, 1), datetime.datetime.now().time())
-    now = now - datetime.timedelta(hours=8)
+    old_day = datetime.datetime(1900, 1, 1)
+    old_day_time = datetime.datetime.now().time()
+    now = datetime.datetime.combine(
+        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
+    )
 
     # Calculate the time difference between the scheduled departure and the current time
     diffs = [i - now for i in arrs]
@@ -200,8 +203,11 @@ def get_schedule(datadirection):
     df = df[df.index == chosen_station]
 
     # Conver this row to the same as the other caltrain output
-    now = datetime.datetime.combine(datetime.datetime(1900, 1, 1), datetime.datetime.now().time())
-    now = now - datetime.timedelta(hours=8)
+    old_day = datetime.datetime(1900, 1, 1)
+    old_day_time = datetime.datetime.now().time()
+    now = datetime.datetime.combine(
+        old_day, datetime.time(old_day_time.hour + 16, old_day_time.minute, old_day_time.second)
+    )
 
     # Transpose the dataframe
     df = df.T.reset_index()
@@ -230,7 +236,7 @@ def get_schedule(datadirection):
     df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
 
-    return df
+    return df.head(5)
 
 
 st.title("🚊 Caltrain Real Times 🛤")
