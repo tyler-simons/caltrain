@@ -154,7 +154,7 @@ def ping_caltrain(station):
 
 
 @st.experimental_memo(ttl=60)
-def get_schedule(datadirection):
+def get_schedule(datadirection, chosen_station):
     # Pull the scheduled train times from this url
     url = "https://www.caltrain.com/?active_tab=route_explorer_tab"
 
@@ -262,7 +262,9 @@ if caltrain_data == "API Down":
     col1.error(
         "❌ Caltrain Live Map API is currently down. Pulling the current schedule from the Caltrain website instead."
     )
-    caltrain_data = pd.concat([get_schedule("northbound"), get_schedule("southbound")])
+    caltrain_data = pd.concat(
+        [get_schedule("northbound", chosen_station), get_schedule("southbound", chosen_station)]
+    )
 else:
     col2.write("\n")
     col2.write("\n")
