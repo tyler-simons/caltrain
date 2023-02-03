@@ -190,6 +190,9 @@ def get_schedule(datadirection, chosen_station):
 
     # Convert the data to a dataframe
     df = pd.DataFrame(data)
+    # Shift the first row over by 1 to the right
+    first_row_vals = df.iloc[0, :][:-1]
+    df.iloc[0, :] = ["Zone"] + first_row_vals.tolist()
 
     # Drop the first column and any nas
     df = df.drop(0, axis=1)
@@ -216,6 +219,7 @@ def get_schedule(datadirection, chosen_station):
         old_day,
         datetime.time(old_day_time.hour, old_day_time.minute),
     )
+    weekday = True if datetime.datetime.now(tz=pstz).weekday() < 5 else False
 
     # Transpose the dataframe
     df = df.T.reset_index()
@@ -247,6 +251,12 @@ def get_schedule(datadirection, chosen_station):
     df = df[df["ETA"] != "0:00"]
     df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
+
+    # Filter for only Train # 200s trains if weekday, otherwise exclude them
+    if not weekday:
+        df = df[df["Train #"].str.startswith("2")]
+    else:
+        df = df[~df["Train #"].str.startswith("2")]
 
     return df.head(5)
 
