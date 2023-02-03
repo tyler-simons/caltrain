@@ -202,7 +202,9 @@ def get_schedule(datadirection):
 
     # Conver this row to the same as the other caltrain output
     old_day = datetime.datetime(1900, 1, 1)
-    old_day_time = datetime.datetime.now().time() - datetime.timedelta(hours=8)
+    old_day_time = datetime.datetime.now().time()
+    old_day_time.hour = old_day_time.hour - 8
+
     now = datetime.datetime.combine(old_day, old_day_time)
 
     # Transpose the dataframe
