@@ -230,7 +230,7 @@ def get_schedule(datadirection):
 
     # Add the time difference to the dataframe
     df["ETA"] = time_diffs
-    st.write(time_diffs)
+
     # Drop the trains that have already left
     df = df[df["ETA"] != "0:00"]
     df.reset_index(drop=True, inplace=True)
