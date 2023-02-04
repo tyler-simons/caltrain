@@ -366,6 +366,7 @@ else:
 
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
+
 # Split the caltrain data based on direction and drop the direction column
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
 caltrain_data_sb = caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1).reset_index(drop=True)
@@ -375,14 +376,19 @@ caltrain_data_nb.index = caltrain_data_nb.index + 1
 caltrain_data_sb.index = caltrain_data_sb.index + 1
 
 col1, col2 = st.columns([2, 1])
-# Display the dataframes split by Train #, Scheduled Departure, Current Stop and the other columns
-with col1.expander("a"):
-    col1.subheader("Northbound Trains")
-    col1.dataframe(caltrain_data_nb.T, use_container_width=True)
 
-with st.expander("b"):
-    col1.subheader("Southbound Trains")
-    col1.dataframe(caltrain_data_sb.T, use_container_width=True)
+# Display the dataframes split by Train #, Scheduled Departure, Current Stop and the other columns
+col1.subheader("Northbound Trains")
+nb_data = caltrain_data_nb.T
+nb_data.columns = nb_data.iloc[0]
+nb_data = nb_data.drop(nb_data.index[0])
+col1.dataframe(nb_data, use_container_width=True)
+
+col1.subheader("Southbound Trains")
+sb_data = caltrain_data_sb.T
+sb_data.columns = sb_data.iloc[0]
+sb_data = sb_data.drop(sb_data.index[0])
+col1.dataframe(sb_data, use_container_width=True)
 
 if col1.button("Refresh Data"):
     st.experimental_rerun()
@@ -392,7 +398,7 @@ col1.markdown("---")
 col1.subheader("Definitions")
 col1.markdown(
     """
-1. **Train Number** - The train ID. The first digit indicates the train type
+1. **Train Number** - The train ID. The first digit indicates the train type.
 2. **Dep. Time** - The scheduled departure time from the **Origin** station.
 3. **ETA** - The estimated time of arrival to the **Origin** station.
 4. **Stops Left** - The number of stops until the train arrives at the **Origin** station.
@@ -402,7 +408,9 @@ col1.markdown(
 
 col1.subheader("About")
 col1.markdown("""
-- This app pulls _real-time_ data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays scheduled time of departure from the **Origin** destination and the number of stops until the train arrives to the **Origin**. If the Caltrain Live Map API is down, then the app will pull the current schedule from the Caltrain website instead.
+- This app pulls _real-time_ data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list). It was created to solve the issue of arriving at the Caltrain station while the train is behind schedule. This app will tell you when the next train is leaving, and about how long it will take to arrive at the station. 
+
+- **Note:** If the Caltrain Live Map API is down, then the app will pull the current schedule from the Caltrain website instead.
 """
 )
 
