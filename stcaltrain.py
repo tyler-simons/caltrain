@@ -57,7 +57,6 @@ def build_caltrain_df():
     all_trains_df = pd.concat(all_trains)
     return all_trains_df
 
-
 def is_northbound(chosen_station, chosen_destination):
     """
     Returns True if the chosen destination is before
@@ -67,7 +66,6 @@ def is_northbound(chosen_station, chosen_destination):
     station_index = stops[stops["stopname"] == chosen_station].index[0]
     destination_index = stops[stops["stopname"] == chosen_destination].index[0]
     return station_index > destination_index
-
 
 def ping_caltrain(station, destination):
     try:
@@ -189,6 +187,8 @@ def ping_caltrain(station, destination):
         "Direction",
         "Current Location",
     ]
+    # Sort by ETA
+    ct_df = ct_df.sort_values("ETA")
 
     # If the index of the station > index of destination -- SB
     if chosen_destination != "--" and chosen_station != chosen_destination:
@@ -436,6 +436,9 @@ col1.markdown("""
 """
 )
 
+
+if col1.button("Refresh 🔄"):
+    st.experimental_rerun()
 
 col1, col2 = st.columns([2, 1])
 with col1:
