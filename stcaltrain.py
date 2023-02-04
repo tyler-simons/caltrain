@@ -353,24 +353,24 @@ api_working = True if caltrain_data.shape[1] != 0 else False
 # Allow switch between live data and scheduled data
 if api_working:
     display = col1.radio(
-        "Displaying",
-        ["Live data", "Scheduled data"],
+        "Show trains",
+        ["Live", "Scheduled"],
         horizontal=True,
-        help="Live only shows trains active now, not necessarily all scheduled trains",
+        help="Live shows only trains that have already left the station",
     )
     schedule_chosen = True
 else:
     display = col1.radio(
-        "Displaying",
-        ["Live data", "Scheduled data"],
+        "Show trains",
+        ["Live", "Scheduled"],
         horizontal=True,
-        help="Live only shows trains active now, not necessarily all scheduled trains",
+        help="Live shows only trains that have already left the station",
         index=1,
         disabled=True,
     )
     schedule_chosen = False
 
-if display == "Scheduled data":
+if display == "Scheduled":
     col1, col2 = st.columns([2, 1])
     if schedule_chosen:
         col1.info("📆 Pulling the current schedule from the Caltrain website...")
@@ -449,10 +449,6 @@ col1.markdown(
 - **Note:** If the Caltrain Live Map API is down, then the app will pull the current schedule from the Caltrain website instead.
 """
 )
-
-
-if col1.button("Refresh 🔄"):
-    st.experimental_rerun()
 
 col1, col2 = st.columns([2, 1])
 with col1:
