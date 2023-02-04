@@ -6,7 +6,7 @@ import datetime
 from streamlit_extras.badges import badge
 from bs4 import BeautifulSoup
 
-st.set_page_config(page_title="Caltrain Timetable", page_icon="🛤", layout="centered")
+st.set_page_config(page_title="Caltrain Platform", page_icon="🚆", layout="centered")
 
 
 def create_train_df(train):
@@ -58,8 +58,18 @@ def build_caltrain_df():
     return all_trains_df
 
 
-@st.experimental_memo(ttl=5)
-def ping_caltrain(station, destination="Burlingame"):
+def is_northbound(chosen_station, chosen_destination):
+    """
+    Returns True if the chosen destination is before
+    the chosen station in the list of stations
+    """
+    stops = pd.read_csv("stop_ids.csv")
+    station_index = stops[stops["stopname"] == chosen_station].index[0]
+    destination_index = stops[stops["stopname"] == chosen_destination].index[0]
+    return station_index > destination_index
+
+
+def ping_caltrain(station, destination):
     try:
         ct_df = build_caltrain_df()
     except:
@@ -81,12 +91,18 @@ def ping_caltrain(station, destination="Burlingame"):
     ct_df["direction"] = ct_df["direction"].map({0: "NB", 1: "SB"})
 
     # If the destination is not None, filter the dataframe to only include trains going to that destination
-    if destination is not None:
+    keep_trains = None
+    if destination not in ["--", station]:
+
+        df_copy = ct_df.copy()
+
         # Select trains where both the origin and destination are in the stops_df
-        ct_df = ct_df.query(f'StopId == "{station}" or StopId == "{destination}"')
+        if destination != "San Francisco":
+            df_copy = df_copy.query(f'StopId == "{station}" or StopId == "{destination}"')
 
         # Group by train_num and count the number of stops
-        ct_df = ct_df.groupby("train_num").filter(lambda x: len(x) > 1)
+        df_copy = df_copy.groupby("train_num").filter(lambda x: len(x) > 1)
+        keep_trains = df_copy["train_num"].unique()
 
     # Get the number of stops from the first train in the dataframe until the station
     ct_df["num_stops"] = (
@@ -165,12 +181,23 @@ def ping_caltrain(station, destination="Burlingame"):
     ]
     ct_df.columns = [
         "Train #",
-        "Sched.",
+        "Dep. Time",
         "ETA",
         "Stops Left",
         "Direction",
         "Curr. Location",
     ]
+
+    # If the index of the station > index of destination -- SB
+    if chosen_destination != "--" and chosen_station != chosen_destination:
+        if is_northbound(chosen_station, chosen_destination):
+            ct_df = ct_df.query(f'Direction == "NB"')
+        else:
+            ct_df = ct_df.query(f'Direction == "SB"')
+
+    if keep_trains is not None:
+        ct_df = ct_df[ct_df["Train #"].isin(keep_trains)]
+
     # Sort by ETA
     ct_df = ct_df.sort_values("ETA")
 
@@ -295,41 +322,33 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
     return df.head(5)
 
 
-st.title("🚊 Caltrain Live 🛤")
+st.title("🚊 Caltrain Platform 🚂")
 caltrain_stations = pd.read_csv("stop_ids.csv")
 col1, col2 = st.columns([2, 1])
 
 col1.markdown(
     """
-    This app pulls real time data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays the estimated departure times for the next trains and the number of stops to go. If the Caltrain Live Map API is down, it will pull the current schedule from the Caltrain website instead.
-
+    Track when the next trains leave from your station and where they are right now. Choose a destination to filter, if you like.
     """
 )
 
 col1, col2 = st.columns([2, 1])
 chosen_station = col1.selectbox("Choose Origin Station", caltrain_stations["stopname"], index=13)
-caltrain_data = ping_caltrain(chosen_station)
+chosen_destination = col1.selectbox(
+    "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
+)
+caltrain_data = ping_caltrain(chosen_station, chosen_destination)
 
-if caltrain_data.shape[0] == 0:
-
-    chosen_destination = col1.selectbox(
-        "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
-    )
+if caltrain_data.shape[1] == 0:
     col1, col2 = st.columns([2, 1])
-
     col1.error(
         "❌ Caltrain Live Map API is currently down. Pulling the current schedule from the Caltrain website instead."
     )
 
     # If the chosen destination is before the chosen station, then the direction is southbound
     if chosen_destination != "--" and chosen_destination != chosen_station:
-        station_index = caltrain_stations[caltrain_stations["stopname"] == chosen_station].index[0]
-        destination_index = caltrain_stations[
-            caltrain_stations["stopname"] == chosen_destination
-        ].index[0]
-        if station_index > destination_index:
+        if is_northbound(chosen_station, chosen_destination):
             caltrain_data = get_schedule("northbound", chosen_station, chosen_destination)
-
         else:
             caltrain_data = get_schedule("southbound", chosen_station, chosen_destination)
 
@@ -349,7 +368,7 @@ caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_tr
 
 # Split the caltrain data based on direction and drop the direction column
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
-caltrain_data_sb = caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1)
+caltrain_data_sb = caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1).reset_index(drop=True)
 
 # Reset the index to 1, 2, 3.
 caltrain_data_nb.index = caltrain_data_nb.index + 1
@@ -357,14 +376,36 @@ caltrain_data_sb.index = caltrain_data_sb.index + 1
 
 col1, col2 = st.columns([2, 1])
 # Display the dataframes split by Train #, Scheduled Departure, Current Stop and the other columns
-col1.subheader("Northbound")
-col1.dataframe(caltrain_data_nb, use_container_width=True)
+with col1.expander("a"):
+    col1.subheader("Northbound Trains")
+    col1.dataframe(caltrain_data_nb.T, use_container_width=True)
 
-col1.subheader("Southbound")
-col1.dataframe(caltrain_data_sb, use_container_width=True)
+with st.expander("b"):
+    col1.subheader("Southbound Trains")
+    col1.dataframe(caltrain_data_sb.T, use_container_width=True)
 
-if col1.button("Refresh 🔄"):
+if col1.button("Refresh Data"):
     st.experimental_rerun()
+
+# Definitions
+col1.markdown("---")
+col1.subheader("Definitions")
+col1.markdown(
+    """
+1. **Train Number** - The train ID. The first digit indicates the train type
+2. **Dep. Time** - The scheduled departure time from the **Origin** station.
+3. **ETA** - The estimated time of arrival to the **Origin** station.
+4. **Stops Left** - The number of stops until the train arrives at the **Origin** station.
+3. **Current Stop** - The closest stop to where the train is currently located.
+4. **Train Type** - Local trains make all stops. Limited and Bullet make fewer.
+""")
+
+col1.subheader("About")
+col1.markdown("""
+- This app pulls _real-time_ data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays scheduled time of departure from the **Origin** destination and the number of stops until the train arrives to the **Origin**. If the Caltrain Live Map API is down, then the app will pull the current schedule from the Caltrain website instead.
+"""
+)
+
 
 col1, col2 = st.columns([2, 1])
 with col1:

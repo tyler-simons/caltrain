@@ -1,9 +1,8 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://caltrain.streamlit.app)
 
+# Caltrain Platform 🚂
 
-# Caltrain Real Time
-
-A project that allows you to see where the Caltrain is based on the Real Time API that is used on the main Caltrain website. The data is formatted to show ETA, current location, and number of stops for the train to get to you.
+A project that allows you to see where the Caltrain is based on the Real Time API that is used on the main Caltrain website. The data is formatted to show ETA, current location, and number of stops for the train to get to you. This way you can sit at home and sip on your ☕️ while you wait for the _very_ late train.
 
 ## Usage
 
