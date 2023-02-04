@@ -57,6 +57,7 @@ def build_caltrain_df():
     all_trains_df = pd.concat(all_trains)
     return all_trains_df
 
+
 def is_northbound(chosen_station, chosen_destination):
     """
     Returns True if the chosen destination is before
@@ -66,6 +67,7 @@ def is_northbound(chosen_station, chosen_destination):
     station_index = stops[stops["stopname"] == chosen_station].index[0]
     destination_index = stops[stops["stopname"] == chosen_destination].index[0]
     return station_index > destination_index
+
 
 def ping_caltrain(station, destination):
     try:
@@ -294,9 +296,7 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
     df["ETA"] = [datetime.datetime.strptime(i, "%I:%M%p") for i in df["Departure Time"].tolist()]
 
     # If the hour is between 12 and 4, add a day to the ETA
-    df["ETA"] = [
-        i + datetime.timedelta(days=1) if i.hour < 4 else i for i in df["ETA"].tolist()
-    ]
+    df["ETA"] = [i + datetime.timedelta(days=1) if i.hour < 4 else i for i in df["ETA"].tolist()]
 
     # Sort by the ETA
     df.sort_values(by="ETA", inplace=True)
@@ -338,7 +338,7 @@ col1, col2 = st.columns([2, 1])
 
 col1.markdown(
     """
-    Track when the next trains leave from your station and where they are right now. Choose a destination to filter, if you like.
+    Track when the next trains leave from your station and where they are right now. Choose a destination to filter for trains that stop there.
     """
 )
 
@@ -352,18 +352,28 @@ api_working = True if caltrain_data.shape[1] != 0 else False
 
 # Allow switch between live data and scheduled data
 if api_working:
-    display = col1.radio("Displaying", ['Live data', 'Scheduled data'], horizontal=True, help="Live only shows trains active now, not necessarily all scheduled trains")
+    display = col1.radio(
+        "Displaying",
+        ["Live data", "Scheduled data"],
+        horizontal=True,
+        help="Live only shows trains active now, not necessarily all scheduled trains",
+    )
     schedule_chosen = True
 else:
-    display = col1.radio("Displaying", ['Live data', 'Scheduled data'], horizontal=True, help="Live only shows trains active now, not necessarily all scheduled trains", index=1, disabled=True)
+    display = col1.radio(
+        "Displaying",
+        ["Live data", "Scheduled data"],
+        horizontal=True,
+        help="Live only shows trains active now, not necessarily all scheduled trains",
+        index=1,
+        disabled=True,
+    )
     schedule_chosen = False
 
-if display == 'Scheduled data':
+if display == "Scheduled data":
     col1, col2 = st.columns([2, 1])
     if schedule_chosen:
-        col1.info(
-            "📆 Pulling the current schedule from the Caltrain website..."
-        )
+        col1.info("📆 Pulling the current schedule from the Caltrain website...")
     else:
         col1.error(
             "❌ Caltrain Live Map API is currently down. Pulling the current schedule from the Caltrain website instead..."
@@ -391,7 +401,9 @@ caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_tr
 
 # Split the caltrain data based on direction and drop the direction column
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
-caltrain_data_sb = caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1).reset_index(drop=True)
+caltrain_data_sb = (
+    caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1).reset_index(drop=True)
+)
 
 # Reset the index to 1, 2, 3.
 caltrain_data_nb.index = caltrain_data_nb.index + 1
@@ -426,10 +438,12 @@ col1.markdown(
 4. **Stops Left** - The number of stops until the train arrives at the **Origin** station.
 3. **Current Stop** - The closest stop to where the train is currently located.
 4. **Train Type** - Local trains make all stops. Limited and Bullet make fewer.
-""")
+"""
+)
 
 col1.subheader("About")
-col1.markdown("""
+col1.markdown(
+    """
 - This app pulls _real-time_ data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list). It was created to solve the issue of arriving at the Caltrain station while the train is behind schedule. This app will tell you when the next train is leaving, and about how long it will take to arrive at the station. 
 
 - **Note:** If the Caltrain Live Map API is down, then the app will pull the current schedule from the Caltrain website instead.
