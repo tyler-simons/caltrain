@@ -58,7 +58,8 @@ def build_caltrain_df():
     return all_trains_df
 
 
-def ping_caltrain(station):
+@st.experimental_memo(ttl=5)
+def ping_caltrain(station, destination="Burlingame"):
     try:
         ct_df = build_caltrain_df()
     except:
