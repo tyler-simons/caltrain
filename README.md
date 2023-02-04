@@ -27,7 +27,3 @@ You can also deploy the function like this once you've set up your google cloud 
 ## Contributing
 
 We welcome additions from the community. Please create an issue or make a PR to add something.
-
-## License
-
-MIT
