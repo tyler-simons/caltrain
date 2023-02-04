@@ -142,6 +142,8 @@ def ping_caltrain(station, destination):
     arrs = [
         datetime.datetime.strptime(i, "%I:%M %p") for i in ct_df["Scheduled Departure"].tolist()
     ]
+    # If arrs are between 12am and 4am, add a day to them
+    arrs = [i + datetime.timedelta(days=1) if i.hour < 4 else i for i in arrs]
 
     # Convert this row to the same as the other caltrain output
     pstz = pytz.timezone("US/Pacific")
@@ -181,11 +183,11 @@ def ping_caltrain(station, destination):
     ]
     ct_df.columns = [
         "Train #",
-        "Dep. Time",
+        "Departure Time",
         "ETA",
         "Stops Left",
         "Direction",
-        "Curr. Location",
+        "Current Location",
     ]
 
     # If the index of the station > index of destination -- SB
@@ -287,10 +289,14 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
 
     df.columns = ["Train #", "Departure Time"]
     df["Direction"] = datadirection
-
     # Map NB to Northbound and SB to Southbound
     df["Direction"] = df["Direction"].map({"northbound": "NB", "southbound": "SB"})
     df["ETA"] = [datetime.datetime.strptime(i, "%I:%M%p") for i in df["Departure Time"].tolist()]
+
+    # If the hour is between 12 and 4, add a day to the ETA
+    df["ETA"] = [
+        i + datetime.timedelta(days=1) if i.hour < 4 else i for i in df["ETA"].tolist()
+    ]
 
     # Sort by the ETA
     df.sort_values(by="ETA", inplace=True)
@@ -312,6 +318,10 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
     df = df[df["ETA"] != "0:00"]
     df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
+
+    # Drop any SF stations northbound
+    if chosen_station in ["San Francisco"]:
+        df = df[df["Direction"] != "NB"]
 
     # Filter for only Train # 200s trains if weekday, otherwise exclude them
     if not weekday:
@@ -338,13 +348,26 @@ chosen_destination = col1.selectbox(
     "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
 )
 caltrain_data = ping_caltrain(chosen_station, chosen_destination)
+api_working = True if caltrain_data.shape[1] != 0 else False
 
-if caltrain_data.shape[1] == 0:
+# Allow switch between live data and scheduled data
+if api_working:
+    display = col1.radio("Displaying", ['Live data', 'Scheduled data'], horizontal=True, help="Live only shows trains active now, not necessarily all scheduled trains")
+    schedule_chosen = True
+else:
+    display = col1.radio("Displaying", ['Live data', 'Scheduled data'], horizontal=True, help="Live only shows trains active now, not necessarily all scheduled trains", index=1, disabled=True)
+    schedule_chosen = False
+
+if display == 'Scheduled data':
     col1, col2 = st.columns([2, 1])
-    col1.error(
-        "❌ Caltrain Live Map API is currently down. Pulling the current schedule from the Caltrain website instead."
-    )
-
+    if schedule_chosen:
+        col1.info(
+            "📆 Pulling the current schedule from the Caltrain website..."
+        )
+    else:
+        col1.error(
+            "❌ Caltrain Live Map API is currently down. Pulling the current schedule from the Caltrain website instead..."
+        )
     # If the chosen destination is before the chosen station, then the direction is southbound
     if chosen_destination != "--" and chosen_destination != chosen_station:
         if is_northbound(chosen_station, chosen_destination):
@@ -359,7 +382,6 @@ if caltrain_data.shape[1] == 0:
                 get_schedule("southbound", chosen_station, chosen_destination),
             ]
         )
-
 
 else:
     col1.success("✅ Caltrain Live Map API is up and running.")
