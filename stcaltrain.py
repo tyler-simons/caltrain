@@ -59,7 +59,7 @@ def build_caltrain_df():
 
 
 @st.experimental_memo(ttl=5)
-def ping_caltrain(station):
+def ping_caltrain(station, destination="Burlingame"):
     try:
         ct_df = build_caltrain_df()
     except:
@@ -79,6 +79,14 @@ def ping_caltrain(station):
 
     # Map direction 0 to Northbound and 1 to southbound
     ct_df["direction"] = ct_df["direction"].map({0: "NB", 1: "SB"})
+
+    # If the destination is not None, filter the dataframe to only include trains going to that destination
+    if destination is not None:
+        # Select trains where both the origin and destination are in the stops_df
+        ct_df = ct_df.query(f'StopId == "{station}" or StopId == "{destination}"')
+
+        # Group by train_num and count the number of stops
+        ct_df = ct_df.groupby("train_num").filter(lambda x: len(x) > 1)
 
     # Get the number of stops from the first train in the dataframe until the station
     ct_df["num_stops"] = (
@@ -157,11 +165,11 @@ def ping_caltrain(station):
     ]
     ct_df.columns = [
         "Train #",
-        "Scheduled Departure",
+        "Sched.",
         "ETA",
         "Stops Left",
         "Direction",
-        "Current Location",
+        "Curr. Location",
     ]
 
     return ct_df
@@ -286,13 +294,13 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
     return df.head(5)
 
 
-st.title("🚊 Caltrain Schedule 🛤")
+st.title("🚊 Caltrain Live 🛤")
 caltrain_stations = pd.read_csv("stop_ids.csv")
 col1, col2 = st.columns([2, 1])
 
 col1.markdown(
     """
-    This app pulls real time data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays the estimated time departure times for the next trains and the number of stops to go. If the Caltrain Live Map API is down, it will pull the current scheduled times from the Caltrain website instead.
+    This app pulls real time data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list) and displays the estimated departure times for the next trains and the number of stops to go. If the Caltrain Live Map API is down, it will pull the current schedule from the Caltrain website instead.
 
     """
 )
