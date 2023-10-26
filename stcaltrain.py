@@ -343,7 +343,7 @@ col1.markdown(
 )
 
 col1, col2 = st.columns([2, 1])
-chosen_station = col1.selectbox("Choose Origin Station", caltrain_stations["stopname"], index=13)
+chosen_station = col1.selectbox("Choose Origin Station", caltrain_stations["stopname"], index=10)
 chosen_destination = col1.selectbox(
     "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
 )
