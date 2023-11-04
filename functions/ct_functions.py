@@ -122,9 +122,11 @@ def build_caltrain_df(stopname):
                 )
     # Create a DataFrame from the collected data
     df = pd.DataFrame(data)
-
     if df.empty:
         return pd.DataFrame()
+
+    # If ETA is null, it means the train is there already, use the departure time instead
+    df["ETA"] = df["ETA"].fillna(df["Departure"])
 
     lt = (
         df["ETA"]
