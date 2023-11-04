@@ -315,6 +315,7 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
     df.sort_values(by="ETA", inplace=True)
 
     diffs = [i - now for i in df["ETA"].tolist()]
+    st.write(diffs)
 
     # 0 if a diff is negative
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
