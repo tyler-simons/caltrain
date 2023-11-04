@@ -129,7 +129,10 @@ def build_caltrain_df(stopname):
     lt = (
         df["ETA"]
         .apply(
-            lambda x: (datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") - datetime.datetime.now())
+            lambda x: (
+                datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
+                - datetime.datetime.now(tz)
+            )
         )
         .to_list()
     )
@@ -157,10 +160,10 @@ def is_northbound(chosen_station, chosen_destination):
 
 
 def ping_caltrain(station, destination):
-    try:
-        ct_df = build_caltrain_df(station)
-    except:
-        return False
+    # try:
+    ct_df = build_caltrain_df(station)
+    # except:
+    # return False
     if ct_df.empty:
         return pd.DataFrame(columns=["Train #", "Direction", "Departure Time", "ETA"])
 
