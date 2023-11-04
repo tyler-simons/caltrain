@@ -294,9 +294,7 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
         datetime.time(old_day_time.hour, old_day_time.minute),
     )
     weekday = True if datetime.datetime.now().weekday() < 5 else False
-    st.write(now)
-    print("now")
-    print(now)
+
     # Transpose the dataframe
     df = df.T.reset_index()
     # Drop any rows with the value -- in the 2nd column
@@ -315,7 +313,6 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
     df.sort_values(by="ETA", inplace=True)
 
     diffs = [i - now for i in df["ETA"].tolist()]
-    st.write(diffs)
 
     # 0 if a diff is negative
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
@@ -328,7 +325,7 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
     df["ETA"] = time_diffs
 
     # Drop the trains that have already left
-    df = df[df["ETA"] != "0:00"]
+    df = df[df["ETA"] != "00:00"]
     df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
 
