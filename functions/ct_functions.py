@@ -116,6 +116,9 @@ def build_caltrain_df(stopname):
     # Create a DataFrame from the collected data
     df = pd.DataFrame(data)
 
+    if df.empty:
+        return pd.DataFrame()
+
     lt = (
         df["ETA"]
         .apply(
@@ -131,6 +134,7 @@ def build_caltrain_df(stopname):
     df["departs_in"] = lt
     # If the stopID is even, the train is northbound, otherwise it is southbound -- make this a string
     df["direction"] = df["Stop ID"].apply(lambda x: "SB" if int(x) % 2 == 0 else "NB")
+
     return df
 
 
@@ -151,10 +155,11 @@ def ping_caltrain(station, destination):
     # except:
     # st.header("TEST")
     # return pd.DataFrame()
+    if ct_df.empty:
+        return pd.DataFrame()
 
     # Move num_stops to the end
     ct_df = ct_df[["Train Number", "direction", "Departure", "departs_in"]]
-    st.write(ct_df)
     # Change column names to TN, Dir, Dep
     ct_df.columns = [
         "Train #",
@@ -162,24 +167,22 @@ def ping_caltrain(station, destination):
         "Departure Time",
         "ETA",
     ]
-    # ct_df["Departure Time"] = ct_df["Departure Time"].apply(
-    #     lambda x: datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").strftime("%I:%m %p")
-    # )
-    # st.write(ct_df)
-    deps = [
-        datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S") for i in ct_df["Departure Time"].tolist()
-    ]
-    st.write(deps)
-    st.write(ct_df)
-    nb_sched = get_schedule("northbound", station, destination)
-    sb_sched = get_schedule("southbound", station, destination)
 
-    # st.write(nb_sched, sb_sched, ct_df)
+    deps = [
+        datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S").strftime("%I:%M %p")
+        for i in ct_df["Departure Time"].tolist()
+    ]
+    ct_df["Departure Time"] = deps
+
+    nb_sched = get_schedule("northbound", station, destination, rows_return=100)
+    sb_sched = get_schedule("southbound", station, destination, rows_return=100)
+
+    st.write(nb_sched, sb_sched, ct_df)
 
     return ct_df
 
 
-def get_schedule(datadirection, chosen_station, chosen_destination=None):
+def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_return=5):
     if chosen_destination == "--" or chosen_station == chosen_destination:
         chosen_destination = None
 
@@ -277,8 +280,12 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
     time_diffs = [i.total_seconds() for i in time_diffs]
 
+    def to_time(seconds):
+        delta = datetime.timedelta(seconds=seconds)
+        return (datetime.datetime.utcfromtimestamp(0) + delta).strftime("%H:%M")
+
     # Convert the time difference to a string like 00:00
-    time_diffs = [str(datetime.timedelta(seconds=i))[0:4] for i in time_diffs]
+    time_diffs = [to_time(i) for i in time_diffs]
 
     # Add the time difference to the dataframe
     df["ETA"] = time_diffs
@@ -298,4 +305,4 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None):
     else:
         df = df[~df["Train #"].str.startswith("2")]
 
-    return df.head(5)
+    return df.head(rows_return)
