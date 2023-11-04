@@ -57,6 +57,7 @@ else:
     schedule_chosen = False
 
 if display == "Scheduled":
+    scheduled = True
     col1, col2 = st.columns([2, 1])
     if schedule_chosen:
         col1.info("📆 Pulling the current schedule from the Caltrain website...")
@@ -78,7 +79,6 @@ if display == "Scheduled":
                 get_schedule("southbound", chosen_station, chosen_destination),
             ]
         )
-        scheduled = True
 
 else:
     col1.success("✅ Caltrain Live Map API is up and running.")
