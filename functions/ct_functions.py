@@ -87,13 +87,16 @@ def build_caltrain_df(stopname):
                 # Convert the arrival and departure timestamps to human-readable format
                 arrival_timestamp = stop_time_update.get("Arrival", {}).get("Time")
                 departure_timestamp = stop_time_update.get("Departure", {}).get("Time")
+
                 eta = (
-                    datetime.datetime.fromtimestamp(arrival_timestamp).strftime("%Y-%m-%d %H:%M:%S")
+                    datetime.datetime.fromtimestamp(arrival_timestamp, tz).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
                     if arrival_timestamp
                     else None
                 )
                 departure = (
-                    datetime.datetime.fromtimestamp(departure_timestamp).strftime(
+                    datetime.datetime.fromtimestamp(departure_timestamp, tz).strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
                     if departure_timestamp
