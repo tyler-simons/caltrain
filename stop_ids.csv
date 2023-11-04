@@ -2,9 +2,9 @@ stop1,stop2,stopname,urlname
 70011,70012,San Francisco,san_francisco
 70021,70022,22nd Street,22nd_street
 70031,70032,Bayshore,bayshore
-70041,70042,South San Francisco,southsf
+70041,70042,South San Francisco,south_sf
 70051,70052,San Bruno,san_bruno
-70061,70062,Millbrae,millbrae
+70061,70062,Millbrae,place_MLBR
 70071,70072,Broadway,broadway
 70081,70082,Burlingame,burlingame
 70091,70092,San Mateo,san_mateo
@@ -16,9 +16,9 @@ stop1,stop2,stopname,urlname
 70161,70162,Menlo Park,menlo_park
 70171,70172,Palo Alto,palo_alto
 70191,70192,California Avenue,california_ave 
-70201,70202,San Antonio,sanantonio
-70211,70212,Mountain View,mountainview
-70221,70222,Sunnyvale, unnyvale
+70201,70202,San Antonio,san_antonio
+70211,70212,Mountain View,mountain_view
+70221,70222,Sunnyvale,sunnyvale
 70231,70232,Lawrence,lawrence
 70241,70242,Santa Clara,santa_clara
 70251,70252,College Park,college_park

@@ -60,7 +60,6 @@ def build_caltrain_df(stopname):
     curr_timestamp = int(curr_timestamp) * 1000
     # ping_url = f"https://www.caltrain.com/files/rt/vehiclepositions/CT.json?time={curr_timestamp}"
     ping_url = f"https://www.caltrain.com/gtfs/stops/{chosen_station_urlname}/predictions"
-
     real_time_trains = requests.get(ping_url).json()
 
     # Assuming `json_data` is the JSON object you provided
@@ -158,10 +157,9 @@ def ping_caltrain(station, destination):
     try:
         ct_df = build_caltrain_df(station)
     except:
-        # st.header("TEST")
-        return pd.DataFrame()
+        return False
     if ct_df.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=["Train #", "Direction", "Departure Time", "ETA"])
 
     # Move num_stops to the end
     ct_df = ct_df[["Train Number", "direction", "Departure", "departs_in"]]
@@ -172,6 +170,10 @@ def ping_caltrain(station, destination):
         "Departure Time",
         "ETA",
     ]
+
+    # Clean up the dataframe
+    ct_df.dropna(inplace=True)
+    ct_df = ct_df[ct_df["ETA"] != "-"]
 
     deps = [
         datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S").strftime("%I:%M %p")

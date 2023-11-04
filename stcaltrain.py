@@ -33,7 +33,7 @@ chosen_destination = col1.selectbox(
     "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
 )
 caltrain_data = ping_caltrain(chosen_station, destination=chosen_destination)
-api_working = True if caltrain_data.shape[1] != 0 else False
+api_working = True if type(caltrain_data) == pd.DataFrame else False
 
 # Allow switch between live data and scheduled data
 if api_working:
@@ -80,7 +80,6 @@ if display == "Scheduled":
 
 else:
     col1.success("✅ Caltrain Live Map API is up and running.")
-
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
 
