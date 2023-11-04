@@ -68,11 +68,14 @@ def build_caltrain_df(stopname):
 
     # Initialize a list to collect data
     data = []
-
+    lat_lons = []
     # Loop through the 'data' part of the JSON
     # Loop through the 'data' part of the JSON
     for entry in json_data["data"]:
         # Each 'entry' corresponds to a 'stop' and its 'predictions'
+        lat_lon = entry.get("stop", {}).get("field_location", {})[0].get("latlon")
+        lat_lons.append(lat_lon)
+
         stop_predictions = entry.get("predictions", [])
         for prediction in stop_predictions:
             trip_update = prediction.get("TripUpdate", {})

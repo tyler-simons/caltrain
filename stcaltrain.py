@@ -126,8 +126,6 @@ col1.markdown(
 1. **Train Number** - The train ID. The first digit indicates the train type.
 2. **Dep. Time** - The scheduled departure time from the **Origin** station.
 3. **ETA** - The estimated number of hours and minutes to the **Origin** station.
-4. **Stops Left** - The number of stops until the train arrives at the **Origin** station.
-3. **Current Stop** - The closest stop to where the train is currently located.
 4. **Train Type** - Local trains make all stops. Limited and Bullet make fewer.
 """
 )
