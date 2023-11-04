@@ -34,6 +34,7 @@ chosen_destination = col1.selectbox(
 )
 caltrain_data = ping_caltrain(chosen_station, destination=chosen_destination)
 api_working = True if type(caltrain_data) == pd.DataFrame else False
+scheduled = False
 
 # Allow switch between live data and scheduled data
 if api_working:
@@ -56,6 +57,7 @@ else:
     schedule_chosen = False
 
 if display == "Scheduled":
+    scheduled = True
     col1, col2 = st.columns([2, 1])
     if schedule_chosen:
         col1.info("📆 Pulling the current schedule from the Caltrain website...")
@@ -83,12 +85,13 @@ else:
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
 # Localize to Pacific Time
-caltrain_data["Departure Time"] = (
-    pd.to_datetime(caltrain_data["Departure Time"])
-    .dt.tz_localize("UTC")
-    .dt.tz_convert("US/Pacific")
-    .dt.strftime("%I:%M %p")
-)
+if scheduled == False:
+    caltrain_data["Departure Time"] = (
+        pd.to_datetime(caltrain_data["Departure Time"])
+        .dt.tz_localize("UTC")
+        .dt.tz_convert("US/Pacific")
+        .dt.strftime("%I:%M %p")
+    )
 
 # Split the caltrain data based on direction and drop the direction column
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
