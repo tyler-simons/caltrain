@@ -162,10 +162,10 @@ def is_northbound(chosen_station, chosen_destination):
 
 
 def ping_caltrain(station, destination):
-    # try:
-    ct_df = build_caltrain_df(station)
-    # except:
-    # return False
+    try:
+        ct_df = build_caltrain_df(station)
+    except:
+        return False
     if ct_df.empty:
         return pd.DataFrame(columns=["Train #", "Direction", "Departure Time", "ETA"])
 
@@ -189,30 +189,34 @@ def ping_caltrain(station, destination):
     ]
     ct_df["Departure Time"] = deps
 
+    # Check the destination and if it's before the station, then the direction is southbound
     nb_sched = get_schedule("northbound", station, destination, rows_return=100)
     sb_sched = get_schedule("southbound", station, destination, rows_return=100)
 
-    # st.write(nb_sched, sb_sched, ct_df)
+    if destination != "--" and destination != station:
+        if is_northbound(station, destination):
+            sched = nb_sched
+            ct_df = ct_df[ct_df["Direction"] == "NB"]
+        else:
+            sched = sb_sched
+            ct_df = ct_df[ct_df["Direction"] == "SB"]
+    else:
+        sched = pd.concat([nb_sched, sb_sched])
 
-    # Merge the scheduled and real time dataframes
-    sched = pd.concat([nb_sched, sb_sched])
     sched["ETA_sched"] = sched["ETA"]
     sched = sched[["Train #", "ETA_sched"]]
     merged = ct_df.merge(sched, how="inner", on=["Train #"], suffixes=("_test", "_sched"))
 
     # Calculate the difference between the scheduled and real time
-    # st.write(merged)
     merged["diff"] = [
         datetime.datetime.strptime(i, "%H:%M") - datetime.datetime.strptime(j, "%H:%M")
         for i, j in zip(merged["ETA"], merged["ETA_sched"])
         if i != "-" and j != "-"
     ]
     merged["total_seconds"] = [i.total_seconds() for i in merged["diff"]]
-    # merged["diff"] = merged["diff"].astype(int)
 
     # Change the minutes to a time
     merged["diff"] = [to_time(i) for i in merged["total_seconds"].tolist()]
-    # st.write(merged)
 
     return ct_df
 
