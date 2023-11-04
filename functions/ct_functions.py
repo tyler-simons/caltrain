@@ -48,7 +48,7 @@ def assign_train_type(x):
 
 
 def build_caltrain_df(stopname):
-    tz = pytz.timezone("US/Pacific")
+    # tz = pytz.timezone("US/Pacific")
 
     # read in the station list and get the matching urlname
     stops_df = pd.read_csv("stop_ids.csv")
@@ -56,7 +56,8 @@ def build_caltrain_df(stopname):
     # Get the urlname for the chosen station
     chosen_station_urlname = stops_df[stops_df["stopname"] == stopname]["urlname"].tolist()[0]
 
-    curr_timestamp = datetime.datetime.utcnow().replace(tzinfo=tz).strftime("%s")
+    curr_timestamp = datetime.datetime.utcnow().strftime("%s")
+
     curr_timestamp = int(curr_timestamp) * 1000
     # ping_url = f"https://www.caltrain.com/files/rt/vehiclepositions/CT.json?time={curr_timestamp}"
     ping_url = f"https://www.caltrain.com/gtfs/stops/{chosen_station_urlname}/predictions"
@@ -89,14 +90,12 @@ def build_caltrain_df(stopname):
                 departure_timestamp = stop_time_update.get("Departure", {}).get("Time")
 
                 eta = (
-                    datetime.datetime.fromtimestamp(arrival_timestamp, tz).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
+                    datetime.datetime.fromtimestamp(arrival_timestamp).strftime("%Y-%m-%d %H:%M:%S")
                     if arrival_timestamp
                     else None
                 )
                 departure = (
-                    datetime.datetime.fromtimestamp(departure_timestamp, tz).strftime(
+                    datetime.datetime.fromtimestamp(departure_timestamp).strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
                     if departure_timestamp
@@ -131,10 +130,7 @@ def build_caltrain_df(stopname):
     lt = (
         df["ETA"]
         .apply(
-            lambda x: (
-                datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
-                - datetime.datetime.now(tz)
-            )
+            lambda x: (datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") - datetime.datetime.now())
         )
         .to_list()
     )
@@ -162,10 +158,10 @@ def is_northbound(chosen_station, chosen_destination):
 
 
 def ping_caltrain(station, destination):
-    try:
-        ct_df = build_caltrain_df(station)
-    except:
-        return False
+    # try:
+    ct_df = build_caltrain_df(station)
+    # except:
+    # return False
     if ct_df.empty:
         return pd.DataFrame(columns=["Train #", "Direction", "Departure Time", "ETA"])
 
@@ -286,14 +282,14 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
         df = df[df.index == chosen_station]
 
     # Convert this row to the same as the other caltrain output
-    pstz = pytz.timezone("US/Pacific")
+    # pstz = pytz.timezone("US/Pacific")
     old_day = datetime.datetime(1900, 1, 1)
-    old_day_time = datetime.datetime.now(tz=pstz).time()
+    old_day_time = datetime.datetime.now().time()
     now = datetime.datetime.combine(
         old_day,
         datetime.time(old_day_time.hour, old_day_time.minute),
     )
-    weekday = True if datetime.datetime.now(tz=pstz).weekday() < 5 else False
+    weekday = True if datetime.datetime.now().weekday() < 5 else False
 
     # Transpose the dataframe
     df = df.T.reset_index()
