@@ -285,18 +285,18 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
         df = df[df.index == chosen_station]
 
     # Convert this row to the same as the other caltrain output
-    # pstz = pytz.timezone("US/Pacific")
+    pstz = pytz.timezone("US/Pacific")
+    utz = pytz.timezone("UTC")
     old_day = datetime.datetime(1900, 1, 1)
     old_day_time = datetime.datetime.now().time()
     now = datetime.datetime.combine(
         old_day,
-        datetime.time(old_day_time.hour, old_day_time.minute),
+        datetime.time(old_day_time.hour, old_day_time.minute, tzinfo=utz),
     )
     weekday = True if datetime.datetime.now().weekday() < 5 else False
 
     # Transpose the dataframe
     df = df.T.reset_index()
-
     # Drop any rows with the value -- in the 2nd column
     df = df[df.iloc[:, 1] != "--"]
 
@@ -304,7 +304,10 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
     df["Direction"] = datadirection
     # Map NB to Northbound and SB to Southbound
     df["Direction"] = df["Direction"].map({"northbound": "NB", "southbound": "SB"})
-    df["ETA"] = [datetime.datetime.strptime(i, "%I:%M%p") for i in df["Departure Time"].tolist()]
+    df["ETA"] = [
+        datetime.datetime.strptime(i, "%I:%M%p").replace(tzinfo=pstz).astimezone(utz)
+        for i in df["Departure Time"].tolist()
+    ]
     # If the hour is between 12 and 4, add a day to the ETA
     df["ETA"] = [i + datetime.timedelta(days=1) if i.hour < 4 else i for i in df["ETA"].tolist()]
 
