@@ -7,6 +7,11 @@ from streamlit_extras.badges import badge
 from bs4 import BeautifulSoup
 
 
+def to_time(seconds):
+    delta = datetime.timedelta(seconds=seconds)
+    return (datetime.datetime.utcfromtimestamp(0) + delta).strftime("%H:%M")
+
+
 def create_train_df(train):
     # Create a dataframe for the train where each stop has arrival and departure times
     stops_df = pd.json_normalize(train["TripUpdate"]["StopTimeUpdate"])
@@ -150,11 +155,11 @@ def is_northbound(chosen_station, chosen_destination):
 
 
 def ping_caltrain(station, destination):
-    # try:
-    ct_df = build_caltrain_df(station)
-    # except:
-    # st.header("TEST")
-    # return pd.DataFrame()
+    try:
+        ct_df = build_caltrain_df(station)
+    except:
+        # st.header("TEST")
+        return pd.DataFrame()
     if ct_df.empty:
         return pd.DataFrame()
 
@@ -177,7 +182,27 @@ def ping_caltrain(station, destination):
     nb_sched = get_schedule("northbound", station, destination, rows_return=100)
     sb_sched = get_schedule("southbound", station, destination, rows_return=100)
 
-    st.write(nb_sched, sb_sched, ct_df)
+    # st.write(nb_sched, sb_sched, ct_df)
+
+    # Merge the scheduled and real time dataframes
+    sched = pd.concat([nb_sched, sb_sched])
+    sched["ETA_sched"] = sched["ETA"]
+    sched = sched[["Train #", "ETA_sched"]]
+    merged = ct_df.merge(sched, how="inner", on=["Train #"], suffixes=("_test", "_sched"))
+
+    # Calculate the difference between the scheduled and real time
+    # st.write(merged)
+    merged["diff"] = [
+        datetime.datetime.strptime(i, "%H:%M") - datetime.datetime.strptime(j, "%H:%M")
+        for i, j in zip(merged["ETA"], merged["ETA_sched"])
+        if i != "-" and j != "-"
+    ]
+    merged["total_seconds"] = [i.total_seconds() for i in merged["diff"]]
+    # merged["diff"] = merged["diff"].astype(int)
+
+    # Change the minutes to a time
+    merged["diff"] = [to_time(i) for i in merged["total_seconds"].tolist()]
+    # st.write(merged)
 
     return ct_df
 
@@ -279,10 +304,6 @@ def get_schedule(datadirection, chosen_station, chosen_destination=None, rows_re
     # 0 if a diff is negative
     time_diffs = [i if i.total_seconds() > 0 else datetime.timedelta(0) for i in diffs]
     time_diffs = [i.total_seconds() for i in time_diffs]
-
-    def to_time(seconds):
-        delta = datetime.timedelta(seconds=seconds)
-        return (datetime.datetime.utcfromtimestamp(0) + delta).strftime("%H:%M")
 
     # Convert the time difference to a string like 00:00
     time_diffs = [to_time(i) for i in time_diffs]

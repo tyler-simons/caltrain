@@ -32,7 +32,6 @@ chosen_station = col1.selectbox("Choose Origin Station", caltrain_stations["stop
 chosen_destination = col1.selectbox(
     "Choose Destination Station", ["--"] + caltrain_stations["stopname"].tolist(), index=0
 )
-st.write(chosen_station)
 caltrain_data = ping_caltrain(chosen_station, destination=chosen_destination)
 api_working = True if caltrain_data.shape[1] != 0 else False
 
