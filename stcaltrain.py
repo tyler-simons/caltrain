@@ -82,6 +82,13 @@ else:
     col1.success("✅ Caltrain Live Map API is up and running.")
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
+# Localize to Pacific Time
+caltrain_data["Departure Time"] = (
+    pd.to_datetime(caltrain_data["Departure Time"])
+    .dt.tz_localize("UTC")
+    .dt.tz_convert("US/Pacific")
+    .dt.strftime("%I:%M %p")
+)
 
 # Split the caltrain data based on direction and drop the direction column
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
