@@ -124,7 +124,7 @@ col1.subheader("Definitions")
 col1.markdown(
     """
 1. **Train Number** - The train ID. The first digit indicates the train type.
-2. **Dep. Time** - The scheduled departure time from the **Origin** station.
+2. **Departure Time** - The scheduled departure time from the **Origin** station.
 3. **ETA** - The estimated number of hours and minutes to the **Origin** station.
 4. **Train Type** - Local trains make all stops. Limited and Bullet make fewer.
 """
