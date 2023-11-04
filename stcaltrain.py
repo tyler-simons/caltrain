@@ -80,7 +80,6 @@ if display == "Scheduled":
 
 else:
     col1.success("✅ Caltrain Live Map API is up and running.")
-st.write(caltrain_data)
 caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
 # Localize to Pacific Time
