@@ -94,6 +94,8 @@ if scheduled == False:
     )
 
 # Split the caltrain data based on direction and drop the direction column
+# sort by eta
+caltrain_data = caltrain_data.sort_values(by=["ETA"])
 caltrain_data_nb = caltrain_data.query("Direction == 'NB'").drop("Direction", axis=1)
 caltrain_data_sb = (
     caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1).reset_index(drop=True)
