@@ -1,31 +1,31 @@
-stop1,stop2,stopname,urlname
-70011,70012,San Francisco,san_francisco
-70021,70022,22nd Street,22nd_street
-70031,70032,Bayshore,bayshore
-70041,70042,South San Francisco,south_sf
-70051,70052,San Bruno,san_bruno
-70061,70062,Millbrae,place_MLBR
-70071,70072,Broadway,broadway
-70081,70082,Burlingame,burlingame
-70091,70092,San Mateo,san_mateo
-70101,70102,Hayward Park,hayward_park
-70111,70112,Hillsdale,hillsdale
-70121,70122,Belmont,belmont
-70131,70132,San Carlos,san_carlos
-70141,70142,Redwood City,redwood_city
-70161,70162,Menlo Park,menlo_park
-70171,70172,Palo Alto,palo_alto
-70191,70192,California Avenue,california_ave 
-70201,70202,San Antonio,san_antonio
-70211,70212,Mountain View,mountain_view
-70221,70222,Sunnyvale,sunnyvale
-70231,70232,Lawrence,lawrence
-70241,70242,Santa Clara,santa_clara
-70251,70252,College Park,college_park
-70261,70262,San Jose Diridon,sj_diridon
-70271,70272,Tamien,tamien
-70281,70282,Capitol,capitol
-70291,70292,Blossom Hill,blossom_hill
-77777,77777,Morgan Hill,morgan_hill
-70301,70302,San Martin,san_martin
-70311,70312,Gilroy,gilroy
+stop1,stop2,stopname,urlname,lat,lon
+70011,70012,San Francisco,san_francisco,37.776286,-122.394925
+70021,70022,22nd Street,22nd_street,37.757288,-122.392434
+70031,70032,Bayshore,bayshore,37.707497,-122.401707
+70041,70042,South San Francisco,south_sf,37.654683,-122.40608
+70051,70052,San Bruno,san_bruno,37.630046,-122.411314
+70061,70062,Millbrae,place_MLBR,37.600199,-122.38675
+70071,70072,Broadway,broadway,37.587243,-122.361912
+70081,70082,Burlingame,burlingame,37.579965,-122.345078
+70091,70092,San Mateo,san_mateo,37.568027,-122.324023
+70101,70102,Hayward Park,hayward_park,37.553024,-122.30956
+70111,70112,Hillsdale,hillsdale,37.541591,-122.301107
+70121,70122,Belmont,belmont,37.521104,-122.276161
+70131,70132,San Carlos,san_carlos,37.507351,-122.259972
+70141,70142,Redwood City,redwood_city,37.485662,-122.231701
+70161,70162,Menlo Park,menlo_park,37.454633,-122.18249
+70171,70172,Palo Alto,palo_alto,37.443356,-122.165356
+70191,70192,California Avenue,california_ave,37.428976,-122.141839
+70201,70202,San Antonio,san_antonio,37.407332,-122.107111
+70211,70212,Mountain View,mountain_view,37.394854,-122.077329
+70221,70222,Sunnyvale,sunnyvale,37.378351,-122.030638
+70231,70232,Lawrence,lawrence,37.370537,-121.997096
+70241,70242,Santa Clara,santa_clara,37.352915,-121.936164
+70251,70252,College Park,college_park,37.342501,-121.91542
+70261,70262,San Jose Diridon,sj_diridon,37.328144,-121.90302
+70271,70272,Tamien,tamien,37.312649,-121.884722
+70281,70282,Capitol,capitol,37.274164,-121.862892
+70291,70292,Blossom Hill,blossom_hill,37.252279,-121.840708
+77777,77777,Morgan Hill,morgan_hill,37.129538,-121.650504
+70301,70302,San Martin,san_martin,37.085729,-121.610338
+70311,70312,Gilroy,gilroy,37.004352,-121.566662
