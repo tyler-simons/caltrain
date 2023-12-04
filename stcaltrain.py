@@ -293,18 +293,20 @@ col1.subheader("Definitions")
 col1.markdown(
     """
 1. **Train Number** - The train ID. The first digit indicates the train type.
-2. **Departure Time** - The scheduled departure time from the **Origin** station.
-3. **ETA** - The estimated number of hours and minutes to the **Origin** station.
-4. **Train Type** - Local trains make all stops. Limited and Bullet make fewer.
+2. **Train Type** - Local trains make all stops. Limited and Bullet make fewer.
+3. **Departure Time** - The scheduled departure time of the train from the **Origin** station.
+4. **ETA** - The estimated number of hours and minutes before the train arrives.
+5. **Distance to Station** - The distance from the train to the **Origin** station.
+6. **Stops Away** - The number of stops until the train reaches the **Origin** station.
 """
 )
 
 col1.subheader("About")
 col1.markdown(
     """
-- This app pulls _real-time_ data from the [Caltrain Live Map](https://www.caltrain.com/schedules/faqs/real-time-station-list). It was created to solve the issue of arriving at the Caltrain station while the train is behind schedule. This app will tell you when the next train is leaving, and about how long it will take to arrive at the station. 
+- This app pulls _real-time_ data from the [511 API](https://511.org/open-data). It was created to solve the issue of arriving at the Caltrain station while the train is behind schedule. This app will tell you when the next train is leaving, and about how long it will take to arrive at the station. 
 
-- **Note:** If the Caltrain Live Map API is down, then the app will pull the current schedule from the Caltrain website instead.
+- **Note:** If the caltrain API is down or there aren't any trains moving, then the app will pull the current schedule from the Caltrain website instead.
 """
 )
 
