@@ -94,7 +94,7 @@ def create_caltrain_dfs(data: dict) -> pd.DataFrame:
                 "train_latitude",
             ]
         ]
-        destinations_df["stops_away"] = destinations_df.index
+        destinations_df["stops_away"] = destinations_df.index + 1
         trains.append(destinations_df)
     trains_df = pd.concat(trains)
 
