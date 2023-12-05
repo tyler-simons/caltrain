@@ -4,14 +4,10 @@ import streamlit as st
 import pytz
 import datetime
 from streamlit_extras.badges import badge
-from bs4 import BeautifulSoup
 from functions.ct_functions import (
-    ping_caltrain,
     get_schedule,
     assign_train_type,
     is_northbound,
-    build_caltrain_df,
-    create_train_df,
 )
 from geopy.distance import geodesic
 import requests
@@ -57,6 +53,17 @@ def create_caltrain_dfs(data: dict) -> pd.DataFrame:
         if train_obj.get("OnwardCalls") is None:
             continue
 
+        next_stop_df = pd.DataFrame(
+            [
+                [
+                    train_obj["MonitoredCall"]["StopPointName"],
+                    train_obj["MonitoredCall"]["StopPointRef"],
+                    train_obj["MonitoredCall"]["AimedArrivalTime"],
+                    train_obj["MonitoredCall"]["ExpectedArrivalTime"],
+                ]
+            ],
+            columns=["stop_name", "stop_id", "aimed_arrival_time", "expected_arrival_time"],
+        )
         destinations_df = pd.DataFrame(
             [
                 [
@@ -69,6 +76,7 @@ def create_caltrain_dfs(data: dict) -> pd.DataFrame:
             ],
             columns=["stop_name", "stop_id", "aimed_arrival_time", "expected_arrival_time"],
         )
+        destinations_df = pd.concat([next_stop_df, destinations_df])
         destinations_df["id"] = train_obj["VehicleRef"]
         destinations_df["origin"] = train_obj["OriginName"]
         destinations_df["origin_id"] = train_obj["OriginRef"]
@@ -94,7 +102,7 @@ def create_caltrain_dfs(data: dict) -> pd.DataFrame:
                 "train_latitude",
             ]
         ]
-        destinations_df["stops_away"] = destinations_df.index + 1
+        destinations_df["stops_away"] = destinations_df.index
         trains.append(destinations_df)
     trains_df = pd.concat(trains)
 
@@ -124,7 +132,6 @@ def create_caltrain_dfs(data: dict) -> pd.DataFrame:
     trains_df["ETA"] = trains_df["Departure Time"] - trains_df["Current Time"]
     trains_df["Train #"] = trains_df["id"]
     trains_df["Direction"] = trains_df["direction"]
-
     return trains_df
 
 
@@ -132,7 +139,10 @@ def clean_up_df(data: pd.DataFrame) -> pd.DataFrame:
     """Clean up the dataframe for display"""
     # Filter for desired columns
     data = data[["Train #", "Train Type", "Departure Time", "ETA", "distance", "stops_away"]]
-    data["ETA"] = data["ETA"].astype(str).str[7:12]
+    data["ETA"] = data["ETA"].apply(lambda x: int(x.total_seconds() / 60))
+    data["ETA"] = data["ETA"].astype("str") + " min"
+
+    # data["ETA"] = data["ETA"].apply(lambda x: f"{int(x // 60)} hr {int(x % 60)} min")
 
     # Rename the columns
     data.columns = [
@@ -304,7 +314,7 @@ col1.markdown(
 col1.subheader("About")
 col1.markdown(
     """
-- This app pulls _real-time_ data from the [511 API](https://511.org/open-data). It was created to solve the issue of arriving at the Caltrain station while the train is behind schedule. This app will tell you when the next train is leaving, and about how long it will take to arrive at the station. 
+- This app pulls _real-time_ data from the [511 API](https://511.org/open-data). It was created to solve the issue of arriving at the Caltrain station while the train is behind schedule. This app will tell you when the next train is leaving, and about how long it will take to arrive at the station.
 
 - **Note:** If the caltrain API is down or there aren't any trains moving, then the app will pull the current schedule from the Caltrain website instead.
 """
