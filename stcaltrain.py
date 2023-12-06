@@ -33,7 +33,7 @@ def ping_train() -> dict:
         data = json.loads(decoded_content)
 
     else:
-        return "Failed to retrieve data"
+        return False
         
 
     if data["Siri"]["ServiceDelivery"]["VehicleMonitoringDelivery"].get("VehicleActivity") is None:
