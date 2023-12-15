@@ -256,7 +256,7 @@ if display == "Scheduled":
     col1.dataframe(sb_data, use_container_width=True)
 
 else:
-    col1.info("⚠️ Caltrain API is missing locations of trains -- displaying available trains below")
+    col1.info("✅ Caltrain API is up and running")
 
     caltrain_data["Train Type"] = caltrain_data["Train #"].apply(lambda x: assign_train_type(x))
 
