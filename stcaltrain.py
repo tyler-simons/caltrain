@@ -34,7 +34,6 @@ def ping_train() -> dict:
 
     else:
         return False
-        
 
     if data["Siri"]["ServiceDelivery"]["VehicleMonitoringDelivery"].get("VehicleActivity") is None:
         return False
@@ -267,9 +266,22 @@ else:
     )
 
     # Filter for destinations
-    if chosen_destination != "--":
-        destinations = caltrain_data[caltrain_data["destination"] == chosen_destination]["id"]
+    valid_destinations = [
+        "San Francisco",
+        "Tamien",
+        "San Jose Diridon",
+    ]
+    if chosen_destination != "--" and chosen_destination not in valid_destinations:
+        st.write(caltrain_data)
+        destinations = caltrain_data[caltrain_data["stopname"] == chosen_destination]["id"]
         caltrain_data = caltrain_data[caltrain_data["id"].isin(destinations)]
+
+    # Remove NB or SB depending on the direction
+    if chosen_destination != "--" and chosen_destination != chosen_station:
+        if is_northbound(chosen_station, chosen_destination):
+            caltrain_data = caltrain_data.query("direction == 'NB'")
+        else:
+            caltrain_data = caltrain_data.query("direction == 'SB'")
 
     # # Display the dataframes split by Train #, Scheduled Departure, Current Stop and the other columns
 
@@ -286,7 +298,7 @@ else:
 
     # Southbound trains
     col1.subheader("Southbound Trains")
-    sb_data = caltrain_data.query("Direction == 'SB'").drop("Direction", axis=1)
+    sb_data = caltrain_data.query("direction == 'SB'").drop("direction", axis=1)
     sb_data = sb_data.sort_values(by=["ETA"])
     sb_data = sb_data[sb_data["stopname"] == chosen_station]
 
