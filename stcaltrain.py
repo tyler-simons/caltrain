@@ -272,7 +272,6 @@ else:
         "San Jose Diridon",
     ]
     if chosen_destination != "--" and chosen_destination not in valid_destinations:
-        st.write(caltrain_data)
         destinations = caltrain_data[caltrain_data["stopname"] == chosen_destination]["id"]
         caltrain_data = caltrain_data[caltrain_data["id"].isin(destinations)]
 
